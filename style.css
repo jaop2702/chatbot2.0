@@ -1,0 +1,638 @@
+
+        /* Variables de Color (Azul Tecnológico) */
+        :root {
+            --primary-dark-blue: #1A2F4F; /* Azul oscuro para fondos principales */
+            --primary-medium-blue: #007BFF; /* Azul medio para acentos y mensajes de usuario */
+            --light-bg-blue: #F0F4F8; /* Gris azulado claro para fondos de chat */
+            --text-dark: #333333; /* Texto oscuro */
+            --text-medium: #666666; /* Texto secundario / gris medio */
+            --white: #FFFFFF; /* Blanco */
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            /* Estos estilos de body pueden interferir con Odoo si se aplican globalmente */
+            /* background-color: var(--light-bg-blue); */
+            color: var(--text-dark);
+        }
+
+        /* Estilos para el botón de abrir el chat (flotante) */
+        .open-chat-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background-color: var(--primary-dark-blue); /* Color azul oscuro */
+            color: var(--white);
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            z-index: 1001; /* Asegura que esté por encima del chat abierto */
+            /* Transiciones para el fondo, transformación y visibilidad */
+            transition: background-color 0.3s ease, transform 0.2s ease, opacity 0.3s ease, visibility 0.3s ease;
+            overflow: hidden;
+        }
+
+        .open-chat-button:hover {
+            background-color: #112239; /* Tono más oscuro al pasar el ratón */
+            transform: scale(1.05);
+        }
+
+        /* Clase para ocultar el botón de forma robusta */
+        .open-chat-button.hidden {
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important; /* Deshabilita clics y eventos de ratón */
+        }
+
+        /* Estilos para la imagen dentro del botón */
+        .open-chat-button img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        /* Contenedor principal del chatbot cuando está abierto (como un popup en la esquina) */
+        .chat-container {
+            position: fixed;
+            bottom: 25px; /* Ajuste para espacio con botón flotante */
+            right: 25px; /* Ajuste para espacio con botón flotante */
+            width: 90%;
+            max-width: 350px; /* Tamaño más compacto */
+            height: 80vh;
+            max-height: 400px; /* Altura máxima más compacta */
+            background-color: var(--white);
+            border-radius: 5px; /* Bordes menos redondeados */
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+
+            /* Ocultar inicialmente y aplicar transición para el movimiento */
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(20px) scale(0.8);
+            transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+        }
+
+        /* Clase para mostrar el chat */
+        .chat-container.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+        }
+
+        /* Botón de cerrar el chat dentro del header */
+        .close-chat-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: transparent;
+            color: var(--white);
+            border: none;
+            font-size: 1em;
+            cursor: pointer;
+            z-index: 1001;
+        }
+        .close-chat-button:hover {
+            color: var(--primary-medium-blue);
+        }
+
+    /* Botón de resetear chat en el header */
+.reset-chat-button {
+    position: absolute;
+    top: 13px;
+    right: 35px;
+    background-color: transparent;
+    color: var(--white); /* Este color ya no afectará a la imagen */
+    border: none;
+    cursor: pointer;
+    z-index: 1001;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+    /* Añadir estilos para el contenedor del botón si es necesario */
+    width: 18px; /* Tamaño del área clickable del botón */
+    height: 18px; /* Alto del área clickable del botón */
+    display: flex; /* Para centrar la imagen */
+    justify-content: center;
+    align-items: center;
+    padding: 0; /* Eliminar padding por defecto del botón */
+    border-radius: 50%; /* Opcional: si quieres el botón redondo */
+}
+        .reset-chat-button:hover {
+            opacity: 1;
+            color: var(--primary-medium-blue);
+        }
+/* NUEVO: Estilos para la imagen DENTRO del botón de reset */
+.reset-chat-button img {
+    width: 100%; /* La imagen ocupa el 100% del ancho del botón */
+    height: 100%; /* La imagen ocupa el 100% del alto del botón */
+    object-fit: contain; /* Ajusta la imagen dentro del botón sin cortarla */
+    /* Puedes usar 'cover' si quieres que la imagen llene el botón y se recorte */
+    vertical-align: middle; /* Para asegurar alineación */
+}
+
+        /* Estilos del encabezado del chat */
+        .chat-header {
+            background-color: var(--primary-dark-blue);
+            color: var(--white);
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            border-bottom: 3px solid var(--primary-medium-blue);
+            position: relative;
+        }
+
+        .chat-header .header-logo {
+            height: 40px;
+            margin-right: 15px;
+            background-color: var(--white);
+            padding: 5px;
+            border-radius: 5px;
+        }
+
+        .chat-header h2 {
+            margin: 0;
+            font-size: 1em; /* Texto más pequeño */
+            font-weight: 500;
+        }
+
+        /* Estilos del área de mensajes */
+        .chat-messages {
+            flex-grow: 1;
+            padding: 10px; /* Menos padding */
+            overflow-y: auto;
+            background-color: var(--light-bg-blue);
+            border-bottom: 1px solid #e0e0e0;
+        }
+/* NUEVO: Wrapper para cada mensaje y su timestamp */
+.message-wrapper {
+    display: flex;
+    flex-direction: column; /* La burbuja y el timestamp se apilan */
+    margin-bottom: 1px; /* Espacio entre wrappers de mensaje */
+    margin-top: 1px; /* Espacio entre wrappers de mensaje */
+    max-width: 80%; /* Para que el wrapper no ocupe todo el ancho y se alinee */
+}
+/* Alineación de los wrappers */
+.message-wrapper.user-message-wrapper {
+    align-self: flex-end; /* Alinea el wrapper a la derecha (para mensajes de usuario) */
+    margin-left: auto; /* Empuja el wrapper a la derecha */
+       margin-bottom: 1px; /* Espacio entre wrappers de mensaje */
+    margin-top: 1px; /* Espacio entre wrappers de mensaje */
+}
+.message-wrapper.bot-message-wrapper {
+    align-self: flex-start; /* Alinea el wrapper a la izquierda (para mensajes del bot) */
+    margin-right: auto; /* Empuja el wrapper a la izquierda */
+       margin-bottom: 1px; /* Espacio entre wrappers de mensaje */
+    margin-top: 1px; /* Espacio entre wrappers de mensaje */
+}
+
+        .message {
+            max-width: 200%;
+            padding: 5px 10px; /* Menos padding */
+            border-radius: 15px;
+            margin-bottom: 5px;
+            margin-top: 5px;
+            line-height: 1.0; /* Interlineado más compacto */
+            word-wrap: break-word;
+            position: relative;
+            padding-right: 40px; /* Espacio para el botón de copiar */
+        }
+        
+/* NUEVO: Estilos para el elemento <audio> dentro de un mensaje */
+.message audio {
+    width: 120%; /* Que ocupe todo el ancho disponible en la burbuja */
+    max-width: 180px; /* Limita el ancho máximo para que no sea muy grande */
+    height: 30px; /* Altura estándar para los controles */
+    margin-top: 5px; /* Pequeño margen entre el texto y el reproductor */
+    display: block; /* Asegura que se muestre en su propia línea */
+    vertical-align: middle; /* Alineación vertical */
+    border-radius: 15px; /* Para que coincida con la burbuja */
+    background-color: var(--light-bg-blue); /* Fondo sutil para el reproductor */
+}
+/* Estilos para el pie de página (timestamp) */
+.message-timestamp {
+    display: block; /* Asegura que ocupe su propia línea */
+    font-size: 0.65em; /* Tamaño de fuente más pequeño */
+    color: var(--text-medium); /* Color gris medio para que sea discreto */
+    opacity: 0.7; /* Ligeramente transparente */
+    margin-top: 1px; /* Pequeño espacio desde la burbuja */
+    padding: 0 5px; /* Padding para el texto del timestamp */
+    /* La alineación del texto del timestamp dentro de su propio bloque */
+    text-align: left; /* Alineación por defecto a la izquierda */
+}
+
+/* Ajuste de texto del timestamp para mensajes de usuario (a la derecha) */
+.user-message-wrapper .message-timestamp {
+    text-align: right;
+}
+
+ /* NUEVO: Estilos para el popup de alerta */
+        .chatbot-alert {
+            position: absolute; /* Posicionado dentro del chat-container */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%); /* Centra el popup */
+            background-color: rgba(0, 0, 0, 0.85); /* Fondo oscuro semitransparente */
+            color: var(--white);
+            padding: 15px 25px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.9em;
+            z-index: 1002; /* Encima de todo el contenido del chat */
+
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .chatbot-alert.active {
+            opacity: 1;
+            visibility: visible;
+        }
+/* Ajuste de texto del timestamp para mensajes del bot (a la izquierda, ya es default) */
+.bot-message-wrapper .message-timestamp {
+    text-align: left;
+}
+
+
+        .user-message {
+            background-color: var(--primary-medium-blue);
+            color: var(--white);
+            align-self: flex-end;
+            margin-left: auto;
+            font-size: 0.8em; /* Texto más pequeño */
+            border-bottom-right-radius: 5px;
+        }
+
+        .bot-message {
+            background-color: var(--white);
+            color: var(--text-dark);
+            align-self: flex-start;
+            margin-right: auto;
+            font-size: 0.8em; /* Texto más pequeño */
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            border-bottom-left-radius: 5px;
+        }
+
+        /* Estilos para el botón de copiar */
+        .copy-button {
+            position: absolute;
+            top: 50%; /* Centrado vertical */
+            right: 5px;
+            transform: translateY(-50%);
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9em;
+            opacity: 0.5;
+            transition: opacity 0.2s ease;
+            padding: 5px;
+            border-radius: 5px;
+            color: var(--text-dark); /* Color del icono */
+        }
+        /* Estilo específico para la imagen dentro del botón de copiar */
+        .copy-button img {
+            width: 18px; /* Tamaño del icono de copiar */
+            height: 18px;
+            vertical-align: middle; /* Alineación para que quede bien */
+        }
+
+        .copy-button:hover {
+            opacity: 1;
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+
+        /* Estilos para el estado "copiado" (el checkmark) */
+        .copy-button.copied-feedback {
+            color: #2fa84b !important;
+            font-size: 1.2em !important;
+            opacity: 1 !important;
+            transform: translateY(-50%) scale(1.2);
+        }
+
+        /* Estilos del área de input de mensaje */
+        .chat-input-area {
+            display: flex;
+            flex-wrap: wrap; /* Permite que los elementos se envuelvan si no caben */
+            padding: 1px 5px;
+            background-color: var(--white);
+            border-top: 1px solid #e0e0e0;
+            align-items: center;
+            /* Eliminamos 'gap' aquí para que el input-wrapper gestione el espacio */
+            gap: 0; 
+        }
+
+        /* NUEVO: Wrapper para el input y los iconos internos */
+        .chat-input-area .input-wrapper {
+            position: relative; /* Para posicionar los iconos internos */
+            display: flex; /* Para que el input y los botones internos se alineen */
+            flex-grow: 1; /* Ocupa el espacio restante */
+            align-items: center;
+            border: 1px solid #ccc; /* El borde se mueve al wrapper */
+            border-radius: 25px; /* Bordes redondeados se mueven al wrapper */
+            overflow: hidden; /* Asegura que los hijos no se salgan */
+            /* Padding right lo maneja el input para el send/mic */
+            padding-right: 5px; /* Pequeño padding para el send button al final */
+            transition: border-color 0.3s ease;
+        }
+
+        .chat-input-area .input-wrapper:focus-within { /* Estilo al enfocar el input dentro del wrapper */
+            border-color: var(--primary-dark-blue);
+        }
+
+        .chat-input-area input[type="text"] {
+            flex-grow: 1; /* Input ocupa el espacio restante */
+            padding: 8px 12px; /* Padding base */
+            padding-left: 40px; /* Espacio para el icono de adjuntar a la izquierda */
+            padding-right: 35px; /* Espacio para el icono de micro/enviar a la derecha */
+            border: none; /* Eliminar el borde del input individual */
+            border-radius: 0; /* Eliminar el redondeo del input individual */
+            font-size: 0.8em;
+            outline: none;
+            background-color: transparent; /* Fondo transparente para ver los iconos */
+        }
+    
+        .chat-input-area img {
+    width: 100%; /* La imagen ocupa el 100% del ancho del botón */
+    height: 100%; /* La imagen ocupa el 100% del alto del botón */
+    object-fit: contain; /* Ajusta la imagen dentro del botón sin cortarla */
+    /* Puedes usar 'cover' si quieres que la imagen llene el botón y se recorte */
+    vertical-align: middle; /* Para asegurar alineación */
+}
+
+        /* Estilos comunes para los botones que van dentro del input visual */
+        .chat-input-area .input-icon {
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            color: var(--text-medium);
+            opacity: 0.7;
+            transition: opacity 0.2s ease, color 0.2s ease;
+            padding: 5px; /* Ajustar padding */
+            border-radius: 50%; /* Hacerlos redondos */
+            position: absolute; /* Posicionamiento absoluto dentro del wrapper */
+            top: 50%; /* Centrar verticalmente */
+            transform: translateY(-50%); /* Ajuste fino */
+            z-index: 2; /* Para que estén sobre el input */
+            display: flex; /* Asegura que los iconos se centren si son flex/img */
+            justify-content: center;
+            align-items: center;
+            font-size: 1.3em; /* Tamaño por defecto para iconos */
+            width: 30px; /* Ancho fijo para iconos */
+            height: 30px; /* Alto fijo para iconos */
+        }
+        .chat-input-area .input-icon:hover {
+            opacity: 1;
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        /* Posicionamiento de los iconos específicos */
+        .chat-input-area .input-icon.left {
+            left: 5px; /* Posicionar a la izquierda */
+        }
+        .chat-input-area .input-icon.right {
+            right: 5px; /* Posicionar a la derecha */
+        }
+
+        /* Estilos específicos para el botón de enviar (dentro del input) */
+        .chat-input-area button#send-button {
+            position: absolute; /* Absoluto para ir al final del input */
+            right: 5px; /* Posicionar a la derecha */
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: transparent;
+            color: var(--primary-dark-blue); /* Color del icono de enviar */
+            border: none;
+            width: 30px; /* Tamaño del icono */
+            height: 30px;
+            font-size: 1.3em; /* Tamaño del icono */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%; /* Redondo */
+            padding: 0; /* Eliminar padding extra */
+            margin: 0; /* Eliminar margin-left */
+            z-index: 3; /* Asegura que esté por encima del micro */
+            box-shadow: none; /* Eliminar sombra si no la queremos */
+        }
+        .chat-input-area button#send-button:hover {
+            background-color: rgba(0, 0, 0, 0.05); /* Hover sutil */
+            color: #112239; /* Hover sutil */
+        }
+        /* Icono de enviar cuando está deshabilitado */
+        .chat-input-area button#send-button[disabled] {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Ajustes para el botón de micro cuando el de enviar está activo */
+        .chat-input-area #mic-button {
+            right: 40px; /* Moverlo a la izquierda para dejar espacio al botón de enviar */
+             position: absolute; /* Absoluto para ir al final del input */
+        
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: transparent;
+            color: var(--primary-dark-blue); /* Color del icono de enviar */
+            border: none;
+            width: 30px; /* Tamaño del icono */
+            height: 30px;
+            font-size: 1.3em; /* Tamaño del icono */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%; /* Redondo */
+            padding: 0; /* Eliminar padding extra */
+            margin: 0; /* Eliminar margin-left */
+            z-index: 3; /* Asegura que esté por encima del micro */
+            box-shadow: none; /* Eliminar sombra si no la queremos */
+        }
+        /* Ocultar el botón de micro cuando el de enviar está visible */
+        .chat-input-area #mic-button.hidden { /* Reutiliza la clase hidden */
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        .chat-input-area #mic-button.recording {
+    color: rgba(47, 245, 8, 0.603); /* Color para grabar */
+    animation: pulse-mic 1s infinite alternate; /* Usar una nueva animación */
+    box-shadow: 0 0 0 0.5em rgba(1, 100, 51, 0.4); /* NUEVO: Efecto de onda sutil */
+      border: none;
+            width: 30px; /* Tamaño del icono */
+            height: 30px;
+            font-size: 1.3em; /* Tamaño del icono */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%; /* Redondo */
+            padding: 0; /* Eliminar padding extra */
+            margin: 0; /* Eliminar margin-left */
+               z-index: 3; 
+    /*transform: scale(1.1); /* Ligeramente más grande */
+    
+}
+/* NUEVO: Animación de pulsación para el micrófono */
+@keyframes pulse-mic {
+    from {
+        box-shadow: 0 0 0 0 rgba(59, 253, 101, 0.4);
+      /*  transform: scale(0.2);*/
+    }
+    to {
+        box-shadow: 0 0 0 0.5em lab(77.27% -75.61 69.65 / 0); /* La "onda" se expande y desvanece */
+       /* transform: scale(1);*/
+    }
+}
+
+/* NUEVO: Estilos para el contador de tiempo del audio */
+.audio-timer {
+    font-size: 0.7em; /* Tamaño pequeño */
+    color: var(--text-medium); /* Color discreto */
+    margin-left: 5px; /* Espacio desde el nombre del archivo */
+    display: none; /* Oculto por defecto */
+    white-space: nowrap; /* Evita saltos de línea */
+}
+
+        /* NUEVO: Estilos para el contenedor de previsualización de medios (archivo/audio) */
+        .staged-media-preview {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            background-color: var(--light-bg-blue);
+            border-radius: 5px;
+            margin-top: 1px;
+            font-size: 0.6em;
+            color: var(--text-dark);
+            border: 1px solid #e0e0e0;
+            width: 100%;
+            box-sizing: border-box;
+
+            opacity: 0;
+            height: 0;
+            overflow: hidden;
+            visibility: hidden;
+            transition: opacity 0.3s ease, height 0.3s ease, margin-top 0.3s ease, visibility 0.3s ease;
+        }
+
+        .staged-media-preview.active {
+            opacity: 1;
+            height: auto;
+            margin-top: 2px;
+            visibility: visible;
+        }
+
+        /* NUEVO: Estilos para el botón de remover medio (la 'X') */
+        .staged-media-preview .remove-staged-button {
+            background-color: transparent;
+            border: none;
+            color: var(--text-medium);
+            cursor: pointer;
+            font-size: 1.2em;
+            padding: 0 5px;
+            line-height: 1;
+            transition: color 0.2s ease, opacity 0.3s ease, visibility 0.3s ease;
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }
+        .staged-media-preview .remove-staged-button.active {
+            opacity: 1 !important;
+            visibility: visible !important;
+            pointer-events: auto !important;
+        }
+        .staged-media-preview .remove-staged-button:hover {
+            color: red;
+        }
+
+
+        /* Scrollbar personalizado */
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: var(--light-bg-blue);
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: var(--primary-dark-blue);
+            border-radius: 4px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #112239;
+        }
+
+        /* Estilos para el indicador de escritura (tres puntos) */
+        .typing-indicator {
+            background-color: var(--white);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            padding: 10px 15px;
+            border-radius: 15px;
+            margin-bottom: 10px;
+            width: fit-content;
+            align-self: flex-start;
+        }
+/* Estilos específicos para el botón de enviar (dentro del input) */
+.chat-input-area button#send-button.hidden-by-send { /* NUEVO: Oculta el botón enviar */
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important; /* Deshabilita clics y eventos de ratón */
+}
+.chat-input-area #mic-button {
+            right: 5px; /* Moverlo a la izquierda para dejar espacio al botón de enviar */
+        }
+/* Estilos específicos para el botón de enviar (dentro del input) */
+.chat-input-area #mic-button.hidden-by-send{ /* NUEVO: Oculta el botón enviar */
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important; /* Deshabilita clics y eventos de ratón */
+}
+        .typing-indicator p {
+            margin: 0;
+            display: flex;
+            align-items: flex-end;
+            gap: 3px;
+        }
+
+        .typing-indicator span {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background-color: var(--text-medium);
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .typing-indicator span:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+        .typing-indicator span:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0s;
+        }
+
+        @keyframes bounce {
+            0%, 80%, 100% {
+                transform: scale(0);
+                opacity: 0.3;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
